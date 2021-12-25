@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.index.IndexDirection;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -14,7 +15,7 @@ import java.math.BigDecimal;
 public class MoneyModelInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @Field("amount")
+    @Field(name = "amount", targetType = FieldType.DECIMAL128)
     @Indexed(direction = IndexDirection.ASCENDING)
     private BigDecimal amount;
 
@@ -25,6 +26,6 @@ public class MoneyModelInfo implements Serializable {
         this.currency = currency;
     }
 
-    public MoneyModelInfo(){
+    public MoneyModelInfo() {
     }
 }

@@ -3,6 +3,7 @@ package com.cp.bootmongo.controller;
 import com.cp.bootmongo.constants.ResponseStatusEnum;
 import com.cp.bootmongo.dto.CatalogDTO;
 import com.cp.bootmongo.dto.CatalogDocumentDTO;
+import com.cp.bootmongo.dto.QueryDTO;
 import com.cp.bootmongo.dto.common.APIResponse;
 import com.cp.bootmongo.helper.Beautifier;
 import com.cp.bootmongo.service.CatalogService;
@@ -51,6 +52,13 @@ public class CatalogController {
         }
         return apiResponseWrapper.wrapResponse(HttpStatus.OK.value(), ResponseStatusEnum.SUCCESS,
                 "fetched successfully", catalogDTO);
+    }
+
+    @GetMapping("/documents/search")
+    public APIResponse<List<CatalogDTO>> findDocumentsBy(@ModelAttribute QueryDTO queryDTO, BindingResult bindingResult) {
+        List<CatalogDTO> catalogDTOS = catalogService.findAllCatalogsByQuery(queryDTO);
+        return apiResponseWrapper.wrapResponse(HttpStatus.OK.value(), ResponseStatusEnum.SUCCESS,
+                "fetched successfully", catalogDTOS);
     }
 
     @PostMapping("/documents")

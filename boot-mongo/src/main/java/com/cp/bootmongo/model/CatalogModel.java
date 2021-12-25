@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.Date;
 import java.util.List;
 
 @Document(collection = "catalog")
@@ -65,6 +66,16 @@ public class CatalogModel {
 
     @Field("freeShipping")
     private boolean freeShipping;
+
+    @Field("attributes")
+    private Object attributes;
+
+    @Field("productOptions")
+    private Object options;
+
+    @Field("createdDate")
+    @Indexed(name="idx_catalog_created_date_v1")
+    private Date createdDate;
 
     public CatalogModel(){
 
