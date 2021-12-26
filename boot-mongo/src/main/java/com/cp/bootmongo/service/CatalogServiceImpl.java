@@ -7,18 +7,24 @@ import com.cp.bootmongo.model.CatalogModel;
 import com.cp.bootmongo.repository.CatalogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalQueries;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @Service("cpCatalogService")
 public class CatalogServiceImpl implements CatalogService {
 
+    public static final String YYYY_MM_DD = "yyyy-MM-dd";
     @Autowired
     private CatalogRepository catalogRepository;
     @Autowired
@@ -89,27 +95,19 @@ public class CatalogServiceImpl implements CatalogService {
     }
 
     private CatalogDTO convertCatalogModelToCatalogDTO(CatalogModel catalogModel) {
-        CatalogDTO catalogDTO = objectMapper.convertValue(catalogModel, CatalogDTO.class);
-        return catalogDTO;
+        return objectMapper.convertValue(catalogModel, CatalogDTO.class);
     }
 
-    private Date convertStringToDate(String date, String format) throws java.text.ParseException {
-        SimpleDateFormat formatter;
-        formatter = new SimpleDateFormat(format);
-        TimeZone gmtTime = TimeZone.getTimeZone("GMT");
-        formatter.setTimeZone(gmtTime);
-        return formatter.parse(date);
-    }
-
-    private Date add(Date date, int calendarField, int amount) {
-        if (date == null) {
-            throw new IllegalArgumentException("The date must not be null");
-        } else {
-            Calendar c = Calendar.getInstance();
-            c.setTime(date);
-            c.add(calendarField, amount);
-            return c.getTime();
-        }
+    private LocalDateTime convertStringToDateWithGMTTimeZone(String date, String format) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        LocalDateTime localDateTime = formatter.parse(date, t -> {
+            LocalDate date1 = t.query(TemporalQueries.localDate());
+            LocalTime time1 = t.query(TemporalQueries.localTime());
+            return LocalDateTime.of(date1, time1 != null ? time1 : LocalTime.MIDNIGHT);
+        });
+        //default date coming from query params is considered to be in GMT time zone
+        ZonedDateTime zonedDateTime = localDateTime.atZone(ZoneId.of("GMT"));
+        return zonedDateTime.toLocalDateTime();
     }
 
     private List<CatalogDTO> queryBySkuId(Long skuId) {
@@ -137,13 +135,13 @@ public class CatalogServiceImpl implements CatalogService {
         String price = queryDTO.getPrice();
         String[] pRanges = price.split(",");
         Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
-        List<CatalogModel> catalogModels;
+        Page<CatalogModel> catalogModels;
         if (pRanges.length == 1) {
             catalogModels = catalogRepository.findByPrice_Amount(new BigDecimal(pRanges[0]), paging);
         } else if (pRanges.length == 2) {
-            catalogModels = catalogRepository.findCatalogModelsByPriceBetween(new BigDecimal(pRanges[0]), new BigDecimal(pRanges[1]), paging);
+            catalogModels = catalogRepository.findByPrice_AmountBetween(new BigDecimal(pRanges[0]), new BigDecimal(pRanges[1]), paging);
         } else {
-            catalogModels = new ArrayList<>();
+            catalogModels = Page.empty();
         }
         for (CatalogModel catalogModel : catalogModels) {
             CatalogDTO catalogDTO2 = convertCatalogModelToCatalogDTO(catalogModel);
@@ -152,22 +150,27 @@ public class CatalogServiceImpl implements CatalogService {
         return catalogDTOs;
     }
 
-    private List<CatalogDTO> queryByCreatedDate(QueryDTO queryDTO) throws java.text.ParseException {
+    private List<CatalogDTO> queryByCreatedDate(QueryDTO queryDTO) {
         List<CatalogDTO> catalogDTOs = new ArrayList<>();
         String dates = queryDTO.getCreatedDate();
         String[] dateRanges = dates.split(",");
         Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
-        List<CatalogModel> catalogModels;
+        Page<CatalogModel> catalogModels;
         if (dateRanges.length == 1) {
-            Date date = convertStringToDate(dateRanges[0], "yyyy-MM-dd");
-            Date toDate = add(date, 5, 1);
-            catalogModels = catalogRepository.findByCreatedDateIsBetween(date, toDate, paging);
+            LocalDateTime date = convertStringToDateWithGMTTimeZone(dateRanges[0], YYYY_MM_DD);
+            //add +4 hrs to GMT Time Zone so that when mongodb converts back to UTC it our query criteria remains as is
+            date = date.plusHours(4);
+            LocalDateTime toDate = date.plusDays(1);
+            catalogModels = catalogRepository.findByCreatedDateBetween(date, toDate, paging);
         } else if (dateRanges.length == 2) {
-            Date date1 = convertStringToDate(dateRanges[0], "yyyy-MM-dd");
-            Date date2 = convertStringToDate(dateRanges[1], "yyyy-MM-dd");
+            LocalDateTime date1 = convertStringToDateWithGMTTimeZone(dateRanges[0], YYYY_MM_DD);
+            //add +4 hrs to GMT Time Zone so that when mongodb converts back to UTC it our query criteria remains as is
+            date1 = date1.plusHours(4);
+            LocalDateTime date2 = convertStringToDateWithGMTTimeZone(dateRanges[1], YYYY_MM_DD);
+            date2 = date2.plusHours(4);
             catalogModels = catalogRepository.findByCreatedDateBetween(date1, date2, paging);
         } else {
-            catalogModels = new ArrayList<>();
+            catalogModels = Page.empty();
         }
         for (CatalogModel catalogModel : catalogModels) {
             CatalogDTO catalogDTO2 = convertCatalogModelToCatalogDTO(catalogModel);
