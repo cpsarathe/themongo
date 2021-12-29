@@ -77,6 +77,9 @@ public class CatalogModel {
     @Indexed(name="idx_catalog_created_date_v1")
     private Date createdDate;
 
+    @Field("salePrice")
+    private MoneyModelInfo salePrice;
+
     public CatalogModel(){
 
     }

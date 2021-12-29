@@ -5,7 +5,9 @@ import com.cp.bootmongo.dto.CatalogDTO;
 import com.cp.bootmongo.dto.CatalogDocumentDTO;
 import com.cp.bootmongo.dto.QueryDTO;
 import com.cp.bootmongo.dto.common.APIResponse;
+import com.cp.bootmongo.dto.feeds.Product;
 import com.cp.bootmongo.helper.Beautifier;
+import com.cp.bootmongo.service.CatalogFeedRESTService;
 import com.cp.bootmongo.service.CatalogService;
 import com.cp.bootmongo.validator.DocumentError;
 import com.cp.bootmongo.validator.DocumentValidator;
@@ -30,6 +32,9 @@ public class CatalogController {
 
     @Autowired
     private CatalogService catalogService;
+
+    @Autowired
+    private CatalogFeedRESTService catalogFeedRESTService;
 
     @Autowired
     private ApiResponseWrapper apiResponseWrapper;
@@ -71,6 +76,14 @@ public class CatalogController {
         catalogService.saveCatalogs(catalogDocumentDTO.getCatalogs());
         return apiResponseWrapper.wrapResponse(HttpStatus.CREATED.value(), ResponseStatusEnum.SUCCESS,
                 "saved successfully", null);
+    }
+
+    @PostMapping("/documents/bulkupload")
+    public APIResponse<String> saveBulkDocuments(@RequestParam("pageSize") int pageSize, @RequestParam("pageNo") int pageNo) {
+        List<Product> products = catalogFeedRESTService.fetchCatalogFeeds(pageSize, pageNo);
+        catalogService.saveCatalogProducts(products);
+        return apiResponseWrapper.wrapResponse(HttpStatus.OK.value(), ResponseStatusEnum.SUCCESS,
+                "saved successfully", "");
     }
 
     @DeleteMapping("/documents/{id}")

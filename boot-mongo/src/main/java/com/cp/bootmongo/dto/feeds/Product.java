@@ -1,9 +1,8 @@
-package com.cp.bootmongo.dto;
+package com.cp.bootmongo.dto.feeds;
 
+import com.cp.bootmongo.dto.MoneyDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
@@ -11,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-public class CatalogDTO implements Serializable {
+public class Product implements Serializable {
     private static final long serialVersionUID = 1L;
     @JsonIgnore
     private Long _id;
@@ -35,6 +34,4 @@ public class CatalogDTO implements Serializable {
     private Object options;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdDate;
-    @JsonIgnore
-    private QueryDTO query;
 }

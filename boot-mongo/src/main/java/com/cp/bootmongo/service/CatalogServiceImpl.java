@@ -2,10 +2,13 @@ package com.cp.bootmongo.service;
 
 import com.cp.bootmongo.dto.CatalogDTO;
 import com.cp.bootmongo.dto.QueryDTO;
+import com.cp.bootmongo.dto.feeds.Product;
 import com.cp.bootmongo.exception.DocumentException;
 import com.cp.bootmongo.model.CatalogModel;
 import com.cp.bootmongo.repository.CatalogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.apachecommons.CommonsLog;
+import org.apache.commons.lang3.RandomUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Service("cpCatalogService")
+@CommonsLog
 public class CatalogServiceImpl implements CatalogService {
 
     public static final String YYYY_MM_DD = "yyyy-MM-dd";
@@ -81,12 +85,33 @@ public class CatalogServiceImpl implements CatalogService {
         return Collections.emptyList();
     }
 
+    @Override
+    public void saveCatalogProducts(List<Product> products) {
+        log.info("Begin saveCatalogProducts with size :" + products.size());
+        List<CatalogModel> catalogModels = new ArrayList<>();
+        for (Product product : products) {
+            CatalogModel catalogModel = convertProductToCatalogModel(product);
+            catalogModels.add(catalogModel);
+        }
+        log.info("converted Product to catalogModel");
+        catalogRepository.saveAll(catalogModels);
+        log.info("End saveCatalogProducts with size :" + products.size());
+    }
+
 
     @Override
     public void deleteDocumentBySkuId(Long skuId) {
         catalogRepository.deleteById(skuId);
     }
 
+
+    private CatalogModel convertProductToCatalogModel(Product product) {
+        CatalogModel catalogModel = objectMapper.convertValue(product, CatalogModel.class);
+        catalogModel.setSkuId(RandomUtils.nextLong());
+        catalogModel.setProductId(RandomUtils.nextLong());
+        catalogModel.set_id(catalogModel.getSkuId());
+        return catalogModel;
+    }
 
     private CatalogModel convertCatalogDTOToCatalogModel(CatalogDTO catalogDTO) {
         CatalogModel catalogModel = objectMapper.convertValue(catalogDTO, CatalogModel.class);
