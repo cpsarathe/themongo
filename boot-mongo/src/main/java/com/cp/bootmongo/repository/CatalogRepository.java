@@ -11,12 +11,25 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface CatalogRepository extends MongoRepository<CatalogModel, Long> {
-     CatalogModel findBy_id(Long skuId);
-     List<CatalogModel> findByNameContains(String name , Pageable pageable);
-     Page<CatalogModel> findByPrice_Amount(BigDecimal amount , Pageable pageable);
-     //by default between results are excluding given criteria i.e  gt>amount1 , lt<amount2
-     @Query("{'price.amount':{$gte:?0,$lte:?1}}")
-     Page<CatalogModel> findByPrice_AmountBetween(BigDecimal amount1 , BigDecimal amount2 , Pageable pageable);
-     Page<CatalogModel> findByCreatedDateBetween(LocalDateTime fromDate, LocalDateTime toDate , Pageable pageable);
+    CatalogModel findBy_id(Long skuId);
+
+    List<CatalogModel> findByNameContains(String name, Pageable pageable);
+
+    Page<CatalogModel> findByPrice_Amount(BigDecimal amount, Pageable pageable);
+
+    //by default between results are excluding given criteria i.e  gt>amount1 , lt<amount2
+    @Query("{'price.amount':{$gte:?0,$lte:?1}}")
+    Page<CatalogModel> findByPrice_AmountBetween(BigDecimal amount1, BigDecimal amount2, Pageable pageable);
+
+    Page<CatalogModel> findByCreatedDateBetween(LocalDateTime fromDate, LocalDateTime toDate, Pageable pageable);
+
+    Page<CatalogModel> findByBrandIn(List<String> brandName, Pageable pageable);
+
+    Page<CatalogModel> findByCategoryIn(List<String> categories, Pageable pageable);
+
+    Page<CatalogModel> findByColorIn(List<String> colors, Pageable pageable);
+
+    Page<CatalogModel> findByCategoryInAndBrandIn(List<String> categories,List<String> brandName, Pageable pageable);
+
 }
 

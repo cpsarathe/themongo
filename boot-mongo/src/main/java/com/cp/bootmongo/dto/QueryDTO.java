@@ -14,6 +14,9 @@ public class QueryDTO implements Serializable {
     private String name;
     private String price;
     private String createdDate;
+    private String brand;
+    private String category;
+    private String color;
     @JsonIgnore
     private int pageNo;
     @JsonIgnore

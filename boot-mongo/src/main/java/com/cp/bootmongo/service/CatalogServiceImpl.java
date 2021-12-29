@@ -21,6 +21,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalQueries;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -77,6 +78,20 @@ public class CatalogServiceImpl implements CatalogService {
             }
             if (!StringUtils.isEmpty(queryDTO.getCreatedDate())) {
                 return queryByCreatedDate(queryDTO);
+            }
+
+            if (!StringUtils.isEmpty(queryDTO.getBrand()) && !StringUtils.isEmpty(queryDTO.getCategory()) ) {
+                return queryByCategoryAndBrand(queryDTO);
+            }
+
+            if (!StringUtils.isEmpty(queryDTO.getBrand())) {
+                return queryByBrand(queryDTO);
+            }
+            if (!StringUtils.isEmpty(queryDTO.getCategory())) {
+                return queryByCategory(queryDTO);
+            }
+            if (!StringUtils.isEmpty(queryDTO.getColor())) {
+                return queryByColor(queryDTO);
             }
         } catch (Exception ex) {
             throw new DocumentException("Error querying :", ex);
@@ -197,6 +212,65 @@ public class CatalogServiceImpl implements CatalogService {
         } else {
             catalogModels = Page.empty();
         }
+        for (CatalogModel catalogModel : catalogModels) {
+            CatalogDTO catalogDTO2 = convertCatalogModelToCatalogDTO(catalogModel);
+            catalogDTOs.add(catalogDTO2);
+        }
+        return catalogDTOs;
+    }
+
+    private List<CatalogDTO> queryByBrand(QueryDTO queryDTO) {
+        List<CatalogDTO> catalogDTOs = new ArrayList<>();
+        String dates = queryDTO.getBrand();
+        String[] brands = dates.split(",");
+        Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
+        List<String> brandList = Arrays.asList(brands);
+        Page<CatalogModel> catalogModels = catalogRepository.findByBrandIn(brandList, paging);
+        for (CatalogModel catalogModel : catalogModels) {
+            CatalogDTO catalogDTO2 = convertCatalogModelToCatalogDTO(catalogModel);
+            catalogDTOs.add(catalogDTO2);
+        }
+        return catalogDTOs;
+    }
+
+    private List<CatalogDTO> queryByCategory(QueryDTO queryDTO) {
+        List<CatalogDTO> catalogDTOs = new ArrayList<>();
+        String category = queryDTO.getCategory();
+        String[] categories = category.split(",");
+        Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
+        List<String> categoriesList = Arrays.asList(categories);
+        Page<CatalogModel> catalogModels = catalogRepository.findByCategoryIn(categoriesList, paging);
+        for (CatalogModel catalogModel : catalogModels) {
+            CatalogDTO catalogDTO2 = convertCatalogModelToCatalogDTO(catalogModel);
+            catalogDTOs.add(catalogDTO2);
+        }
+        return catalogDTOs;
+    }
+
+    private List<CatalogDTO> queryByColor(QueryDTO queryDTO) {
+        List<CatalogDTO> catalogDTOs = new ArrayList<>();
+        String color = queryDTO.getColor();
+        String[] colors = color.split(",");
+        Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
+        List<String> colorList = Arrays.asList(colors);
+        Page<CatalogModel> catalogModels = catalogRepository.findByColorIn(colorList, paging);
+        for (CatalogModel catalogModel : catalogModels) {
+            CatalogDTO catalogDTO2 = convertCatalogModelToCatalogDTO(catalogModel);
+            catalogDTOs.add(catalogDTO2);
+        }
+        return catalogDTOs;
+    }
+
+    private List<CatalogDTO> queryByCategoryAndBrand(QueryDTO queryDTO) {
+        List<CatalogDTO> catalogDTOs = new ArrayList<>();
+        String category = queryDTO.getCategory();
+        String[] categories = category.split(",");
+        List<String> categoriesList = Arrays.asList(categories);
+        String brand = queryDTO.getBrand();
+        String[] brands = brand.split(",");
+        List<String> brandList = Arrays.asList(brands);
+        Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
+        Page<CatalogModel> catalogModels = catalogRepository.findByCategoryInAndBrandIn(categoriesList , brandList , paging);
         for (CatalogModel catalogModel : catalogModels) {
             CatalogDTO catalogDTO2 = convertCatalogModelToCatalogDTO(catalogModel);
             catalogDTOs.add(catalogDTO2);
