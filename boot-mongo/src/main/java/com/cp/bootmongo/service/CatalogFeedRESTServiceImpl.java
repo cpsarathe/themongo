@@ -23,13 +23,13 @@ public class CatalogFeedRESTServiceImpl implements CatalogFeedRESTService {
 
     public List<Product> fetchCatalogFeeds(int pageSize, int pageNo) {
         try {
-            HttpHeaders httpHeaders = createHeaders("dscatalog", "P@ss1234");
+            HttpHeaders httpHeaders = createHeaders("dsdsd", "dsdsd");
             HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
             Map<String, Integer> params = new HashMap<>();
             params.put("pageSize", pageSize);
             params.put("page", pageNo);
             UriComponents builder = UriComponentsBuilder
-                    .fromHttpUrl("https://www.stg-ds.com/feeds/catalog-feed")
+                    .fromHttpUrl("https://www.testtest.com/feeds/catalog-feed")
                     .queryParam("pageSize", pageSize)
                     .queryParam("page", pageNo)
                     .build();

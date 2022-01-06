@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -80,7 +81,7 @@ public class CatalogServiceImpl implements CatalogService {
                 return queryByCreatedDate(queryDTO);
             }
 
-            if (!StringUtils.isEmpty(queryDTO.getBrand()) && !StringUtils.isEmpty(queryDTO.getCategory()) ) {
+            if (!StringUtils.isEmpty(queryDTO.getBrand()) && !StringUtils.isEmpty(queryDTO.getCategory())) {
                 return queryByCategoryAndBrand(queryDTO);
             }
 
@@ -161,7 +162,7 @@ public class CatalogServiceImpl implements CatalogService {
     private List<CatalogDTO> queryBySkuName(QueryDTO queryDTO) {
         List<CatalogDTO> catalogDTOs = new ArrayList<>();
         String name = queryDTO.getName();
-        Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
+        Pageable paging = buildPagingAndSorting(queryDTO);
         List<CatalogModel> catalogModels = catalogRepository.findByNameContains(name, paging);
         for (CatalogModel catalogModel : catalogModels) {
             CatalogDTO catalogDTO2 = convertCatalogModelToCatalogDTO(catalogModel);
@@ -174,7 +175,7 @@ public class CatalogServiceImpl implements CatalogService {
         List<CatalogDTO> catalogDTOs = new ArrayList<>();
         String price = queryDTO.getPrice();
         String[] pRanges = price.split(",");
-        Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
+        Pageable paging = buildPagingAndSorting(queryDTO);
         Page<CatalogModel> catalogModels;
         if (pRanges.length == 1) {
             catalogModels = catalogRepository.findByPrice_Amount(new BigDecimal(pRanges[0]), paging);
@@ -194,7 +195,7 @@ public class CatalogServiceImpl implements CatalogService {
         List<CatalogDTO> catalogDTOs = new ArrayList<>();
         String dates = queryDTO.getCreatedDate();
         String[] dateRanges = dates.split(",");
-        Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
+        Pageable paging = buildPagingAndSorting(queryDTO);
         Page<CatalogModel> catalogModels;
         if (dateRanges.length == 1) {
             LocalDateTime date = convertStringToDateWithGMTTimeZone(dateRanges[0], YYYY_MM_DD);
@@ -223,7 +224,7 @@ public class CatalogServiceImpl implements CatalogService {
         List<CatalogDTO> catalogDTOs = new ArrayList<>();
         String dates = queryDTO.getBrand();
         String[] brands = dates.split(",");
-        Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
+        Pageable paging = buildPagingAndSorting(queryDTO);
         List<String> brandList = Arrays.asList(brands);
         Page<CatalogModel> catalogModels = catalogRepository.findByBrandIn(brandList, paging);
         for (CatalogModel catalogModel : catalogModels) {
@@ -237,7 +238,7 @@ public class CatalogServiceImpl implements CatalogService {
         List<CatalogDTO> catalogDTOs = new ArrayList<>();
         String category = queryDTO.getCategory();
         String[] categories = category.split(",");
-        Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
+        Pageable paging = buildPagingAndSorting(queryDTO);
         List<String> categoriesList = Arrays.asList(categories);
         Page<CatalogModel> catalogModels = catalogRepository.findByCategoryIn(categoriesList, paging);
         for (CatalogModel catalogModel : catalogModels) {
@@ -251,7 +252,7 @@ public class CatalogServiceImpl implements CatalogService {
         List<CatalogDTO> catalogDTOs = new ArrayList<>();
         String color = queryDTO.getColor();
         String[] colors = color.split(",");
-        Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
+        Pageable paging = buildPagingAndSorting(queryDTO);
         List<String> colorList = Arrays.asList(colors);
         Page<CatalogModel> catalogModels = catalogRepository.findByColorIn(colorList, paging);
         for (CatalogModel catalogModel : catalogModels) {
@@ -269,12 +270,33 @@ public class CatalogServiceImpl implements CatalogService {
         String brand = queryDTO.getBrand();
         String[] brands = brand.split(",");
         List<String> brandList = Arrays.asList(brands);
-        Pageable paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
-        Page<CatalogModel> catalogModels = catalogRepository.findByCategoryInAndBrandIn(categoriesList , brandList , paging);
+        Pageable paging = buildPagingAndSorting(queryDTO);
+        Page<CatalogModel> catalogModels = catalogRepository.findByCategoryInAndBrandIn(categoriesList, brandList, paging);
         for (CatalogModel catalogModel : catalogModels) {
             CatalogDTO catalogDTO2 = convertCatalogModelToCatalogDTO(catalogModel);
             catalogDTOs.add(catalogDTO2);
         }
         return catalogDTOs;
+    }
+
+    private Pageable buildPagingAndSorting(QueryDTO queryDTO) {
+        String sortBy = queryDTO.getSortBy();
+        Sort sortOrder = null;
+        if(!StringUtils.isEmpty(sortBy)) {
+            String[] sorts = !StringUtils.isEmpty(sortBy) ? sortBy.split(" ") : null;
+            if (sorts[1].equalsIgnoreCase(Sort.Direction.ASC.name())) {
+                sortOrder = Sort.by(Sort.Direction.ASC, sorts[0]);
+            }
+            else if (sorts[1].equalsIgnoreCase(Sort.Direction.DESC.name())) {
+                sortOrder = Sort.by(Sort.Direction.DESC, sorts[0]);
+            }
+        }
+        Pageable paging = null;
+        if (sortOrder != null) {
+            paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize(), sortOrder);
+        } else {
+            paging = PageRequest.of(queryDTO.getPageNo(), queryDTO.getPageSize());
+        }
+        return paging;
     }
 }
