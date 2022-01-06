@@ -19,3 +19,4 @@ http://localhost:10091/bootmongo/catalog/documents/search?price=121.00,126.00&pa
 http://localhost:10091/bootmongo/catalog/documents/search?createdDate=2021-12-21,2021-12-27&pageSize=10
 Page<CatalogModel>findByCreatedDateBetween(LocalDateTime fromDate,LocalDateTime toDate,Pageable pageable);
 
+## There is still a lot to explore querying , persisting , unit testing , concurrency . **But this is a good place to start with**
